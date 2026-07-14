@@ -35,7 +35,7 @@ kbd{background:#374151;color:#fff;border-radius:4px;padding:1px 5px;font-size:11
 <input class="rev" id="rev" placeholder="your name"><button class="dl" onclick="exportCSV()">Download CSV</button></div>
 <div class="wrap">
 <div id="reviewUI"><div id="cardwrap"></div><div id="donewrap" style="display:none"></div>
-<div class="actions" id="abar"><span id="chgbadge" class="badge ok">✓ matches model</span>
+<div class="actions" id="abar"><span id="chgbadge" class="badge"></span>
 <button class="saveb" onclick="commitNext()">Next → <kbd>Enter</kbd></button>
 <button class="reset" onclick="resetModel()">Reset to model <kbd>R</kbd></button>
 <button class="skip" onclick="skip()">Skip <kbd>S</kbd></button><button class="back" onclick="back()">← Back</button></div></div>
@@ -86,7 +86,7 @@ function markAll(){const d=DATA[i];if(!d)return;const m=d.m;let chg=0;
  ACT.forEach(a=>{const md=m.actors[a];chk('men_'+a,!!md);const men=document.getElementById('men_'+a);
    if(men&&men.checked){chk('f_'+a,md?md.f:'');chk('o_'+a,md?md.o:'');chk('g_'+a,md?md.g:'');chk('p_'+a,md?md.p:'');chk('b_'+a,md?md.b:'');chk('sep_'+a,md?!!md.sep:false);}});
  const b=document.getElementById('chgbadge');
- if(chg){b.textContent='⚠ '+chg+' change'+(chg>1?'s':'')+' — counts as disagreement';b.className='badge chg';}else{b.textContent='✓ matches model';b.className='badge ok';}}
+ if(chg){b.textContent='⚠ '+chg+' change'+(chg>1?'s':'')+' — counts as disagreement';b.className='badge chg';}else{b.textContent='';b.className='badge';}}
 function resetModel(){const d=DATA[i],m=d.m;sv('topic',m.topic);
  ACT.forEach(a=>{const md=m.actors[a];const men=document.getElementById('men_'+a);
    if(men){men.checked=!!md;document.getElementById('sub_'+a).style.display=md?'grid':'none';document.getElementById('act_'+a).classList.toggle('on',!!md);}
