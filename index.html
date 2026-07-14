@@ -30,14 +30,13 @@ kbd{background:#374151;color:#fff;border-radius:4px;padding:1px 5px;font-size:11
 <div class="top"><b>BTN Review · v5</b>
 <button class="modebtn active" id="mReview" onclick="setMode('review')">✍ Review (Pass 1)</button>
 <button class="modebtn" id="mCompare" onclick="setMode('compare')">⇄ Compare P1↔P2</button>
-<span class="stat" id="revstat">Tweet <b id="pos">1</b>/<b id="tot">0</b> · reviewed <b id="ndone">0</b> · agree <b id="agr">—</b></span>
+<span class="stat" id="revstat">Tweet <b id="pos">1</b>/<b id="tot">0</b> · coded <b id="ndone">0</b> · % correct <b id="agr">—</b></span>
 <div class="bar"><i id="prog"></i></div>
 <input class="rev" id="rev" placeholder="your name"><button class="dl" onclick="exportCSV()">Download CSV</button></div>
 <div class="wrap">
 <div id="reviewUI"><div id="cardwrap"></div><div id="donewrap" style="display:none"></div>
-<div class="actions" id="abar"><span id="chgbadge" class="badge"></span>
-<button class="saveb" onclick="commitNext()">Next → <kbd>Enter</kbd></button>
-<button class="reset" onclick="resetModel()">Reset to model <kbd>R</kbd></button>
+<div class="actions" id="abar">
+<button class="saveb" onclick="commitNext()">Submit &amp; next → <kbd>Enter</kbd></button>
 <button class="skip" onclick="skip()">Skip <kbd>S</kbd></button><button class="back" onclick="back()">← Back</button></div></div>
 <div id="compareUI" style="display:none"></div></div>
 <script>
@@ -60,37 +59,26 @@ function setMode(m){mode=m;
   document.getElementById('reviewUI').style.display=(m==='review')?'':'none';
   document.getElementById('compareUI').style.display=(m==='compare')?'':'none';
   if(m==='compare')renderCompare(); else render();}
-function actorRow(a,md){const on=!!md,m=md||{};
- return `<div class="actor ${on?'on':''}" id="act_${a}"><label class="arow"><input type="checkbox" id="men_${a}" ${on?'checked':''} onchange="toggleAct('${a}')"> ${ALBL[a]}</label>
-  <div class="sub" id="sub_${a}" style="display:${on?'grid':'none'}">
-   <div class="fld"><label>framing</label><select id="f_${a}">${opts(V.fr,m.f)}</select></div>
-   <div class="fld"><label>overall_framing</label><select id="o_${a}">${opts(V.ovf,m.o)}</select></div>
-   <div class="fld"><label>government</label><select id="g_${a}">${opts(V.gf,m.g)}</select></div>
-   <div class="fld"><label>people</label><select id="p_${a}">${opts(V.pf,m.p)}</select></div>
-   <div class="fld"><label>blame</label><select id="b_${a}">${opts(V.bl,m.b)}</select></div>
-   <div class="fld"><label><input type="checkbox" id="sep_${a}" ${m.sep?'checked':''}> people split from govt</label></div>
-  </div>${on?`<div class="ro">model blamed_for: ${esc(m.bf)||'—'}</div><div class="ro ev">“${esc(m.ev)}”</div>`:''}</div>`;}
-function toggleAct(a){const on=document.getElementById('men_'+a).checked;document.getElementById('sub_'+a).style.display=on?'grid':'none';document.getElementById('act_'+a).classList.toggle('on',on);markAll();}
+function actorRow(a){
+ return `<div class="actor" id="act_${a}"><label class="arow"><input type="checkbox" id="men_${a}" onchange="toggleAct('${a}')"> ${ALBL[a]}</label>
+  <div class="sub" id="sub_${a}" style="display:none">
+   <div class="fld"><label>framing</label><select id="f_${a}">${opts(V.fr,'')}</select></div>
+   <div class="fld"><label>overall_framing</label><select id="o_${a}">${opts(V.ovf,'')}</select></div>
+   <div class="fld"><label>government</label><select id="g_${a}">${opts(V.gf,'')}</select></div>
+   <div class="fld"><label>people</label><select id="p_${a}">${opts(V.pf,'')}</select></div>
+   <div class="fld"><label>blame</label><select id="b_${a}">${opts(V.bl,'')}</select></div>
+   <div class="fld"><label><input type="checkbox" id="sep_${a}"> people split from govt</label></div>
+  </div></div>`;}
+function toggleAct(a){const on=document.getElementById('men_'+a).checked;document.getElementById('sub_'+a).style.display=on?'grid':'none';document.getElementById('act_'+a).classList.toggle('on',on);}
 function render(){stats();document.getElementById('rev').value=REV;
  if(i>=DATA.length){showDone();return;}
  document.getElementById('donewrap').style.display='none';document.getElementById('cardwrap').style.display='';document.getElementById('abar').style.display='flex';
- const d=DATA[i],m=d.m,ah=ACT.map(a=>actorRow(a,m.actors[a])).join('');
+ const d=DATA[i],ah=ACT.map(a=>actorRow(a)).join('');
  document.getElementById('cardwrap').innerHTML=`<div class="card"><div><div class="date">${d.date} · ${d.pid}</div>
-   <a class="twlink" href="${d.url}" target="_blank" rel="noopener">↗ Open original tweet on X</a><div class="tw">${esc(d.body)}</div></div>
-   <div><div class="fld"><label>primary topic</label><select id="topic">${opts(V.topic,m.topic)}</select></div>
-   <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin:6px 0 4px">Actors (Pass 1 = date-aware)</div>${ah}</div></div>`;
- markAll();}
-function markAll(){const d=DATA[i];if(!d)return;const m=d.m;let chg=0;
- const chk=(id,mv)=>{const e=document.getElementById(id);if(!e)return;const cur=e.type==='checkbox'?e.checked:e.value;const diff=String(cur)!==String(mv);e.classList.toggle('override',diff);if(diff)chg++;};
- chk('topic',m.topic);
- ACT.forEach(a=>{const md=m.actors[a];chk('men_'+a,!!md);const men=document.getElementById('men_'+a);
-   if(men&&men.checked){chk('f_'+a,md?md.f:'');chk('o_'+a,md?md.o:'');chk('g_'+a,md?md.g:'');chk('p_'+a,md?md.p:'');chk('b_'+a,md?md.b:'');chk('sep_'+a,md?!!md.sep:false);}});
- const b=document.getElementById('chgbadge');
- if(chg){b.textContent='⚠ '+chg+' change'+(chg>1?'s':'')+' — counts as disagreement';b.className='badge chg';}else{b.textContent='';b.className='badge';}}
-function resetModel(){const d=DATA[i],m=d.m;sv('topic',m.topic);
- ACT.forEach(a=>{const md=m.actors[a];const men=document.getElementById('men_'+a);
-   if(men){men.checked=!!md;document.getElementById('sub_'+a).style.display=md?'grid':'none';document.getElementById('act_'+a).classList.toggle('on',!!md);}
-   if(md){sv('f_'+a,md.f);sv('o_'+a,md.o);sv('g_'+a,md.g);sv('p_'+a,md.p);sv('b_'+a,md.b);const s=document.getElementById('sep_'+a);if(s)s.checked=!!md.sep;}});markAll();}
+   <a class="twlink" href="${d.url}" target="_blank" rel="noopener">↗ Open original tweet on X</a><div class="tw">${esc(d.body)}</div>
+   <div class="ro" style="margin-top:10px">Code this tweet from scratch — the model's answer is hidden. Your % correct = how often you match it.</div></div>
+   <div><div class="fld"><label>primary topic</label><select id="topic">${opts(V.topic,'')}</select></div>
+   <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin:6px 0 4px">Actors — check the ones this tweet is about</div>${ah}</div></div>`;}
 function collect(){const d=DATA[i],m=d.m,o={topic:gv('topic'),actors:{}};let agreed=0,total=0;
  const cmp=(rv,mv)=>{total++;if(String(rv||"")===String(mv||""))agreed++;};cmp(o.topic,m.topic);
  ACT.forEach(a=>{const rMen=document.getElementById('men_'+a).checked,md=m.actors[a],mMen=!!md;
@@ -101,7 +89,7 @@ function commitNext(){const d=DATA[i];const{o,agreed,total}=collect();R[d.pid]={
 function skip(){let n=i+1;while(n<DATA.length&&R[DATA[n].pid])n++;i=Math.min(n,DATA.length);render();}
 function back(){let p=-1;for(let k=Math.min(i,DATA.length)-1;k>=0;k--){if(R[DATA[k].pid]){p=k;break;}}if(p<0){if(i>0)i--;}else{delete R[DATA[p].pid];save();i=p;}render();}
 function showDone(){document.getElementById('cardwrap').style.display='none';document.getElementById('abar').style.display='none';stats();
- document.getElementById('donewrap').style.display='block';document.getElementById('donewrap').innerHTML=`<div class="done"><div class="big">${Object.keys(R).length}/${DATA.length} reviewed ✓</div><p>Agreement with model: <b>${document.getElementById('agr').textContent}</b></p><button class="dl" onclick="exportCSV()">Download CSV</button></div>`;}
+ document.getElementById('donewrap').style.display='block';document.getElementById('donewrap').innerHTML=`<div class="done"><div class="big">${Object.keys(R).length}/${DATA.length} reviewed ✓</div><p>% correct (matched the model): <b>${document.getElementById('agr').textContent}</b></p><button class="dl" onclick="exportCSV()">Download CSV</button></div>`;}
 // ---------- COMPARE P1 vs P2 ----------
 function diffFields(d){const m=d.m,m2=d.m2,out=[];
  if(String(m.topic||"")!==String(m2.topic||""))out.push(["primary_topic",m.topic,m2.topic]);
@@ -118,17 +106,15 @@ function renderCompare(){let n=0,html="";
    df.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(String(r[1]))}</td><td>${esc(String(r[2]))}</td></tr>`).join('')+`</table></div>`;});
  document.getElementById('compareUI').innerHTML=`<div class="cmphead"><b>Pass 1 (date-aware) vs Pass 2 (date-blind)</b> — ${n} of ${DATA.length} sample tweets differ on ≥1 field. Blue = Pass 1, orange = Pass 2. (This section is read-only.)</div>`+html;}
 document.getElementById('rev').addEventListener('input',e=>{REV=e.target.value;localStorage.setItem('btn_v5_rev',REV);});
-document.addEventListener('keydown',e=>{if(mode!=='review'||e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT')return;if(e.key==='Enter')commitNext();else if(e.key==='s'||e.key==='S')skip();else if(e.key==='r'||e.key==='R')resetModel();else if(e.key==='ArrowLeft')back();});
-document.getElementById('cardwrap').addEventListener('change',markAll);
+document.addEventListener('keydown',e=>{if(mode!=='review'||e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT')return;if(e.key==='Enter')commitNext();else if(e.key==='s'||e.key==='S')skip();else if(e.key==='ArrowLeft')back();});
 function exportCSV(){const cols=["pid","date","reviewer","changed","agreed","total","primary_topic"];
  ACT.forEach(a=>["mentioned","framing","overall_framing","government_framing","people_framing","people_sep","blame"].forEach(s=>cols.push(a+"_"+s)));
- ACT.forEach(a=>["framing","overall_framing","blame"].forEach(s=>cols.push("model_"+a+"_"+s)));
  const rows=[cols.join(",")];
  DATA.forEach(d=>{const r=R[d.pid];if(!r)return;const m=d.m,rv0=r.rev;
    const rec={pid:d.pid,date:d.date,reviewer:REV,changed:r.changed,agreed:r.agreed,total:r.total,primary_topic:rv0.topic};
    ACT.forEach(a=>{const md=m.actors[a],rv=rv0.actors[a]||null;
      rec[a+"_mentioned"]=rv?"True":"False";rec[a+"_framing"]=rv?rv.f:"";rec[a+"_overall_framing"]=rv?rv.o:"";rec[a+"_government_framing"]=rv?rv.g:"";rec[a+"_people_framing"]=rv?rv.p:"";rec[a+"_people_sep"]=rv?(rv.sep?"True":"False"):"";rec[a+"_blame"]=rv?rv.b:"";
-     rec["model_"+a+"_framing"]=md?md.f:"";rec["model_"+a+"_overall_framing"]=md?md.o:"";rec["model_"+a+"_blame"]=md?md.b:"";});
+});
    rows.push(cols.map(c=>{let v=(rec[c]==null?"":String(rec[c]));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(","));});
  const b=new Blob([rows.join("\n")],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="BTN_v5_review_"+((REV||"reviewer").replace(/[^a-z0-9]/gi,'_'))+".csv";a.click();}
 i=firstTodo();render();

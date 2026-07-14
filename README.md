@@ -1,10 +1,13 @@
-# BTN Narrative Review Tool — v5
+# BTN Narrative Review Tool — v5 (blind)
 
-Spot-check the gpt-5 (de-biased, actor-generalized v5) coding for accuracy. Open **index.html** in any browser.
+Blind accuracy check of the gpt-5 (de-biased, actor-generalized v5) coding. Open **index.html** in any browser.
 
-## Two modes (top-left toggle)
-- **✍ Review (Pass 1)** — review the model's **Pass 1 (date-aware)** coding. A fixed random **300 tweets** — the same 300 for everyone (seed-locked, embedded). For each mentioned actor you check `framing`, `overall_framing`, `government`, `people`, `blame` (+ people-split) and `primary_topic`. Model's `blamed_for` + evidence shown for context. Any dropdown change counts as a disagreement; live agreement % (95% CI). Download CSV exports your calls + the model's side-by-side.
-- **⇄ Compare P1↔P2** — read-only view of where **Pass 1 (date-aware)** and **Pass 2 (date-blind)** disagree, per tweet and per field (the date-contrast reliability check).
+## Review (Pass 1) — BLIND
+- A fixed random **300 tweets**, the same for everyone (seed-locked, embedded).
+- You **code each tweet from scratch** — dropdowns start empty, the model's answer is **hidden**, so you can't be primed.
+- Per actor you check: mentioned + framing / overall_framing / government / people / blame (+ people-split); plus primary_topic.
+- After you submit, the tool scores you against the hidden model and shows a running **% correct** (95% CI). Download CSV exports only *your* answers + your score (no model labels).
+- Keys: Enter = submit & next · S = skip · ← = back.
 
-Keys (Review): Enter = save & next · R = reset to model · S = skip · ← = back.
-Data embedded from the v5 pass-1/pass-2 coding.
+## Compare P1↔P2
+A separate analysis view showing where Pass 1 (date-aware) and Pass 2 (date-blind) differ — this one DOES display model output, for analysts (not for blind review).
